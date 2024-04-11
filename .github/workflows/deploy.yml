@@ -29,13 +29,15 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build, tag, and push image to Amazon ECR
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/softcery:latest
-          cache-from: type=registry,ref=${{ steps.login-ecr.outputs.registry }}/softcery:latest
-          cache-to: type=inline
+        env:
+         ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+         IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
+         
+      - name: Print the image digest
+        run: echo ${{ steps.build-and-push.outputs.digest }}
 
   deploy:
     name: Deploy to ECS
